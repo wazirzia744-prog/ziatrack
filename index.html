@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ZiaTrack</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body { margin: 0; font-family: Arial; }
+
+    .app { display: flex; height: 100vh; }
+
+    .sidebar {
+      width: 220px;
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+    }
+
+    .sidebar button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      background: #34495e;
+      color: white;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      border-radius: 5px;
+    }
+
+    .main {
+      flex: 1;
+      padding: 20px;
+      background: #f4f4f4;
+      overflow: auto;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      box-sizing: border-box;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 30px 80px 100px 110px 1fr 60px;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+    }
+
+    .header {
+      font-weight: bold;
+      background: #ddd;
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      color: red;
+      cursor: pointer;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h2>ZiaTrack</h2>
+    <button onclick="showPage('dashboard')">📊 Dashboard</button>
+    <button onclick="showPage('add')">➕ Add Expense</button>
+    <button onclick="showPage('settings')">⚙️ Settings</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="dashboardPage">
+
+      <h3>Total Spent: <span id="total">0</span></h3>
+
+      <select id="sortBy" onchange="sortExpenses()">
+        <option value="newest">Date: Newest → Oldest</option>
+        <option value="oldest">Date: Old → New</option>
+        <option value="high">Amount: High → Low</option>
+        <option value="low">Amount: Low → High</option>
+      </select>
+
+      <button id="deleteSelectedBtn"
+        onclick="deleteSelected()"
+        style="display:none;background:red;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
+        Delete Selected
+      </button>
+
+      <div class="row header">
+        <div></div>
+        <div>Amount</div>
+        <div>Date</div>
+        <div>Category</div>
+        <div>Note</div>
+        <div>Action</div>
+      </div>
+
+      <div id="list"></div>
+    </div>
+
+    <!-- ADD -->
+    <div id="addPage" style="display:none;">
+      <h3>Add Expense</h3>
+
+      <label>Amount</label>
+      <input type="number" id="amount">
+
+      <label>Category</label>
+      <select id="category"></select>
+
+      <label>Date</label>
+      <input type="date" id="date">
+
+      <label>Notes</label>
+      <input type="text" id="notes">
+
+      <button onclick="addExpense()">Add</button>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settingsPage" style="display:none;">
+      <h3>Settings</h3>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+let expenses = JSON.parse(localStorage.getItem("ziatrack_expenses")) || [];
+
+let defaultCategories = [
+  "Accessories","Bills","Books","Business","Car","Clothing","Communication",
+  "Education","Electronics","Entertainment","Food","Fuel","Gifts","Health",
+  "Home","Insurance","Investment","Loan","Medical","Mobile","Movies","Music",
+  "Other","Personal Care","Pets","Rent","Repair","Savings","Shopping","Snacks",
+  "Subscriptions","Taxi","Taxes","Technology","Transport","Travel","Utilities",
+  "Water","Work","Gym","Fitness","Kids","School","College","Office","Salary",
+  "Freelance","Internet","Electricity"
+];
+
+let customCategories =
+  JSON.parse(localStorage.getItem("custom_categories")) || [];
+
+function save() {
+  localStorage.setItem("ziatrack_expenses", JSON.stringify(expenses));
+}
+
+function saveCategories() {
+  localStorage.setItem("custom_categories", JSON.stringify(customCategories));
+}
+
+function showPage(p) {
+  document.getElementById("dashboardPage").style.display = "none";
+  document.getElementById("addPage").style.display = "none";
+  document.getElementById("settingsPage").style.display = "none";
+  document.getElementById(p + "Page").style.display = "block";
+}
+
+function formatDate(d) {
+  if (!d) return "";
+  let [y,m,day] = d.split("-");
+  return day + "/" + m + "/" + y;
+}
+
+/* ADD EXPENSE */
+function addExpense() {
+  let amount = document.getElementById("amount").value;
+  let category = document.getElementById("category").value;
+  let date = document.getElementById("date").value;
+  let notes = document.getElementById("notes").value;
+
+  if (!amount) return;
+
+  expenses.push({
+    id: Date.now(),
+    amount: Number(amount),
+    category,
+    date: formatDate(date),
+    notes
+  });
+
+  save();
+  display();
+}
+
+/* DELETE */
+function deleteExpense(id) {
+  if (!confirm("Delete this expense?")) return;
+  expenses = expenses.filter(e => e.id !== id);
+  save();
+  display();
+}
+
+/* MULTI DELETE */
+function toggleDeleteBtn() {
+  let checked = document.querySelectorAll(".chk:checked").length;
+  document.getElementById("deleteSelectedBtn").style.display =
+    checked > 0 ? "block" : "none";
+}
+
+function deleteSelected() {
+  let checked = document.querySelectorAll(".chk:checked");
+  if (!confirm("Delete selected items?")) return;
+
+  let ids = Array.from(checked).map(c=>Number(c.value));
+  expenses = expenses.filter(e => !ids.includes(e.id));
+
+  save();
+  display();
+}
+
+/* SORT */
+function sortExpenses() {
+  let type = document.getElementById("sortBy").value;
+
+  expenses.sort((a,b)=>{
+
+    let da = a.date.split("/").reverse().join("-");
+    let db = b.date.split("/").reverse().join("-");
+
+    if (type==="newest") return new Date(db)-new Date(da);
+    if (type==="oldest") return new Date(da)-new Date(db);
+    if (type==="high") return b.amount-a.amount;
+    if (type==="low") return a.amount-b.amount;
+
+  });
+
+  display();
+}
+
+/* DISPLAY */
+function display() {
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  for (let e of expenses) {
+    list.innerHTML += `
+      <div class="row">
+
+        <input type="checkbox" class="chk" value="${e.id}" onchange="toggleDeleteBtn()">
+
+        <div><b>${e.amount}</b></div>
+        <div>${e.date}</div>
+        <div>${e.category}</div>
+        <div>${e.notes || "-"}</div>
+
+        <button class="btn-del" onclick="deleteExpense(${e.id})">❌</button>
+
+      </div>
+    `;
+  }
+
+  document.getElementById("total").innerText =
+    expenses.reduce((t,e)=>t+e.amount,0);
+}
+
+/* CATEGORIES */
+function loadCategories() {
+  let sel = document.getElementById("category");
+
+  let all = [...defaultCategories, ...customCategories];
+  all.sort((a,b)=>a.localeCompare(b));
+
+  sel.innerHTML = "";
+
+  all.forEach(c=>{
+    let o=document.createElement("option");
+    o.value=c;
+    o.text=c;
+    sel.appendChild(o);
+  });
+
+  let add=document.createElement("option");
+  add.value="__add__";
+  add.text="➕ Add Category";
+  sel.appendChild(add);
+
+  sel.onchange=function(){
+    if(this.value==="__add__"){
+      let n=prompt("Enter category name:");
+      if(n){
+        customCategories.push(n);
+        saveCategories();
+        loadCategories();
+      }
+    }
+  };
+}
+
+/* INIT */
+display();
+loadCategories();
+showPage("dashboard");
+
+</script>
+
+</body>
+</html>
