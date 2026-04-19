@@ -1,74 +1,195 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZTrack</title>
+  <title>ZiaTrack - Expense Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
 
   <style>
-    body { margin: 0; font-family: Arial; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; }
 
     .app { display: flex; height: 100vh; }
 
     .sidebar {
-      width: 220px;
-      background: #2c3e50;
+      width: 250px;
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
       color: white;
       padding: 20px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     }
+
+    .sidebar h2 { margin-bottom: 20px; font-size: 24px; }
 
     .sidebar button {
       width: 100%;
       margin: 10px 0;
-      padding: 10px;
-      background: #34495e;
+      padding: 12px;
+      background: rgba(255,255,255,0.1);
       color: white;
       border: none;
       cursor: pointer;
       text-align: left;
       border-radius: 5px;
+      transition: all 0.3s;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .sidebar button:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateX(5px);
     }
 
     .main {
       flex: 1;
-      padding: 20px;
-      background: #f4f4f4;
-      overflow: auto;
+      padding: 30px;
+      background: #f0f2f5;
+      overflow-y: auto;
     }
 
-    input, select, button {
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.3s; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    input[type="number"], input[type="date"], input[type="text"], select {
       width: 100%;
       padding: 10px;
-      margin: 5px 0;
-      box-sizing: border-box;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
     }
+
+    input:focus, select:focus { outline: none; border-color: #3498db; box-shadow: 0 0 5px rgba(52,152,219,0.3); }
+
+    button.btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+
+    button.btn-primary:hover { background: #2980b9; }
 
     .row {
       display: grid;
-      grid-template-columns: 30px 80px 100px 110px 1fr 60px;
+      grid-template-columns: 30px 80px 100px 110px 1fr 80px;
       align-items: center;
       gap: 10px;
       background: white;
-      padding: 10px;
+      padding: 12px;
       margin: 8px 0;
       border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
     .header {
-      font-weight: bold;
-      background: #ddd;
+      font-weight: 600;
+      background: #ecf0f1;
+      padding: 15px 12px;
+      border-radius: 5px;
+      margin-bottom: 10px;
     }
 
     .btn-del {
       background: none;
       border: none;
-      color: red;
+      color: #e74c3c;
       cursor: pointer;
+      font-size: 16px;
+      padding: 5px;
+      transition: transform 0.2s;
     }
 
+    .btn-del:hover { transform: scale(1.2); }
+
+    .btn-delete-selected {
+      background: #e74c3c;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      margin: 10px 0;
+      display: none;
+    }
+
+    .btn-delete-selected:hover { background: #c0392b; }
+
     label {
-      font-weight: bold;
+      font-weight: 600;
       display: block;
-      margin-top: 10px;
+      margin-top: 15px;
+      color: #2c3e50;
+    }
+
+    h3 { color: #2c3e50; margin-bottom: 20px; }
+
+    .stats {
+      background: white;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .stats h2 { color: #3498db; font-size: 28px; }
+
+    .stats p { color: #7f8c8d; font-size: 14px; }
+
+    .settings-container { max-width: 500px; }
+
+    .setting-btn {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      background: #ecf0f1;
+      border: 1px solid #bdc3c7;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .setting-btn:hover { background: #d5dbdb; }
+
+    .setting-btn.danger { background: #fadbd8; border-color: #e74c3c; color: #c0392b; }
+
+    .setting-btn.danger:hover { background: #f5b7b1; }
+
+    .success-msg {
+      background: #d5f4e6;
+      color: #27ae60;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      display: none;
+    }
+
+    .error-msg {
+      background: #fadbd8;
+      color: #c0392b;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .app { flex-direction: column; }
+      .sidebar { width: 100%; }
+      .row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -79,35 +200,38 @@
 
   <!-- SIDEBAR -->
   <div class="sidebar">
-    <h2>ZiaTrack</h2>
-    <button onclick="showPage('dashboard')">📊 Dashboard</button>
-    <button onclick="showPage('add')">➕ Add Expense</button>
-    <button onclick="showPage('settings')">⚙️ Settings</button>
+    <h2>💰 ZiaTrack</h2>
+    <button onclick="navigate('dashboard')">📊 Dashboard</button>
+    <button onclick="navigate('add')">➕ Add Expense</button>
+    <button onclick="navigate('settings')">⚙️ Settings</button>
   </div>
 
   <!-- MAIN -->
   <div class="main">
 
-    <!-- DASHBOARD -->
-    <div id="dashboardPage">
+    <!-- DASHBOARD PAGE -->
+    <div id="dashboardPage" class="page active">
+      <h3>Dashboard</h3>
 
-      <h3>Total Spent: <span id="total">0</span></h3>
+      <div class="stats">
+        <h2>💵 <span id="total">0</span></h2>
+        <p>Total Spent</p>
+      </div>
 
+      <label for="sortBy">Sort By:</label>
       <select id="sortBy" onchange="sortExpenses()">
-        <option value="newest">Date: Newest → Oldest</option>
-        <option value="oldest">Date: Old → New</option>
-        <option value="high">Amount: High → Low</option>
-        <option value="low">Amount: Low → High</option>
+        <option value="newest">📅 Date: Newest → Oldest</option>
+        <option value="oldest">📅 Date: Oldest → Newest</option>
+        <option value="high">📈 Amount: High → Low</option>
+        <option value="low">📉 Amount: Low → High</option>
       </select>
 
-      <button id="deleteSelectedBtn"
-        onclick="deleteSelected()"
-        style="display:none;background:red;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
-        Delete Selected
+      <button class="btn-delete-selected" id="deleteSelectedBtn" onclick="deleteSelected()">
+        🗑️ Delete Selected
       </button>
 
       <div class="row header">
-        <div></div>
+        <div>✓</div>
         <div>Amount</div>
         <div>Date</div>
         <div>Category</div>
@@ -116,30 +240,70 @@
       </div>
 
       <div id="list"></div>
+
+      <div id="emptyState" style="text-align: center; padding: 40px; color: #95a5a6;">
+        <p style="font-size: 48px; margin-bottom: 10px;">📭</p>
+        <p>No expenses yet. Add one to get started!</p>
+      </div>
     </div>
 
-    <!-- ADD -->
-    <div id="addPage" style="display:none;">
-      <h3>Add Expense</h3>
+    <!-- ADD EXPENSE PAGE -->
+    <div id="addPage" class="page">
+      <h3>Add New Expense</h3>
 
-      <label>Amount</label>
-      <input type="number" id="amount">
+      <div class="error-msg" id="addErrorMsg"></div>
+      <div class="success-msg" id="addSuccessMsg">✓ Expense added successfully!</div>
 
-      <label>Category</label>
+      <label for="amount">Amount *</label>
+      <input type="number" id="amount" placeholder="0.00" min="0.01" step="0.01">
+
+      <label for="category">Category *</label>
       <select id="category"></select>
 
-      <label>Date</label>
+      <label for="date">Date *</label>
       <input type="date" id="date">
 
-      <label>Notes</label>
-      <input type="text" id="notes">
+      <label for="notes">Notes</label>
+      <input type="text" id="notes" placeholder="Optional notes">
 
-      <button onclick="addExpense()">Add</button>
+      <button class="btn-primary" onclick="addExpense()">➕ Add Expense</button>
     </div>
 
-    <!-- SETTINGS -->
-    <div id="settingsPage" style="display:none;">
+    <!-- SETTINGS PAGE -->
+    <div id="settingsPage" class="page">
       <h3>Settings</h3>
+
+      <div class="settings-container">
+        <h4 style="margin: 20px 0 15px 0;">Manage Your Data</h4>
+
+        <button class="setting-btn" onclick="exportData()">
+          📥 Export as JSON
+        </button>
+
+        <button class="setting-btn" onclick="importData()">
+          📤 Import from JSON
+        </button>
+
+        <button class="setting-btn" onclick="downloadCSV()">
+          📊 Download as CSV
+        </button>
+
+        <h4 style="margin: 30px 0 15px 0; color: #e74c3c;">Danger Zone</h4>
+
+        <button class="setting-btn danger" onclick="clearAllData()">
+          🗑️ Clear All Expenses
+        </button>
+
+        <button class="setting-btn danger" onclick="resetCategories()">
+          🔄 Reset Categories
+        </button>
+
+        <p style="margin-top: 20px; color: #7f8c8d; font-size: 12px;">
+          Version 2.0 • Data saved locally in your browser
+        </p>
+      </div>
+
+      <input type="file" id="importFile" accept=".json" style="display:none;" onchange="handleImport(event)">
     </div>
 
   </div>
@@ -147,171 +311,336 @@
 
 <script>
 
-let expenses = JSON.parse(localStorage.getItem("ziatrack_expenses")) || [];
-
+// ============ DATA MANAGEMENT ============
+let expenses = [];
 let defaultCategories = [
   "Accessories","Bills","Books","Business","Car","Clothing","Communication",
-  "Education","Electronics","Entertainment","Food","Fuel","Gifts","Health",
-  "Home","Insurance","Investment","Loan","Medical","Mobile","Movies","Music",
-  "Other","Personal Care","Pets","Rent","Repair","Savings","Shopping","Snacks",
-  "Subscriptions","Taxi","Taxes","Technology","Transport","Travel","Utilities",
-  "Water","Work","Gym","Fitness","Kids","School","College","Office","Salary",
-  "Freelance","Internet","Electricity"
+  "Education","Electronics","Entertainment","Food","Fuel","Gifts","Gym","Health",
+  "Home","Insurance","Internet","Investment","Loan","Medical","Mobile","Movies",
+  "Music","Other","Personal Care","Pets","Rent","Repair","Salary","Savings",
+  "School","Shopping","Snacks","Subscriptions","Taxi","Taxes","Technology",
+  "Transport","Travel","Utilities","Water","Work"
 ];
 
-let customCategories =
-  JSON.parse(localStorage.getItem("custom_categories")) || [];
+let customCategories = [];
 
-function save() {
-  localStorage.setItem("ziatrack_expenses", JSON.stringify(expenses));
+// Load data on page load
+function initData() {
+  try {
+    expenses = JSON.parse(localStorage.getItem("ziatrack_expenses")) || [];
+    customCategories = JSON.parse(localStorage.getItem("custom_categories")) || [];
+    
+    // Set today's date in date input
+    document.getElementById("date").valueAsDate = new Date();
+  } catch (e) {
+    console.error("Error loading data:", e);
+    expenses = [];
+    customCategories = [];
+  }
+}
+
+function saveExpenses() {
+  try {
+    localStorage.setItem("ziatrack_expenses", JSON.stringify(expenses));
+  } catch (e) {
+    showError("addErrorMsg", "Storage quota exceeded!");
+  }
 }
 
 function saveCategories() {
   localStorage.setItem("custom_categories", JSON.stringify(customCategories));
 }
 
-function showPage(p) {
-  document.getElementById("dashboardPage").style.display = "none";
-  document.getElementById("addPage").style.display = "none";
-  document.getElementById("settingsPage").style.display = "none";
-  document.getElementById(p + "Page").style.display = "block";
+// ============ PAGE NAVIGATION ============
+function navigate(pageName) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(pageName + "Page").classList.add("active");
+  
+  // Clear messages
+  document.getElementById("addErrorMsg").style.display = "none";
+  document.getElementById("addSuccessMsg").style.display = "none";
 }
 
-function formatDate(d) {
-  if (!d) return "";
-  let [y,m,day] = d.split("-");
-  return day + "/" + m + "/" + y;
-}
-
-/* ADD EXPENSE */
+// ============ EXPENSE OPERATIONS ============
 function addExpense() {
-  let amount = document.getElementById("amount").value;
-  let category = document.getElementById("category").value;
-  let date = document.getElementById("date").value;
-  let notes = document.getElementById("notes").value;
+  const amount = document.getElementById("amount").value.trim();
+  const category = document.getElementById("category").value;
+  const date = document.getElementById("date").value;
+  const notes = document.getElementById("notes").value.trim();
 
-  if (!amount) return;
+  // Validation
+  if (!amount || isNaN(amount) || Number(amount) <= 0) {
+    showError("addErrorMsg", "Please enter a valid amount (must be greater than 0)");
+    return;
+  }
 
-  expenses.push({
+  if (!date) {
+    showError("addErrorMsg", "Please select a date");
+    return;
+  }
+
+  if (!category) {
+    showError("addErrorMsg", "Please select a category");
+    return;
+  }
+
+  // Create expense object
+  const expense = {
     id: Date.now(),
-    amount: Number(amount),
-    category,
-    date: formatDate(date),
-    notes
-  });
+    amount: parseFloat(amount),
+    category: category,
+    date: date,
+    notes: notes,
+    createdAt: new Date().toISOString()
+  };
 
-  save();
-  display();
+  expenses.push(expense);
+  saveExpenses();
+
+  // Clear form and show success
+  document.getElementById("amount").value = "";
+  document.getElementById("notes").value = "";
+  document.getElementById("date").valueAsDate = new Date();
+  document.getElementById("category").selectedIndex = 0;
+
+  showSuccess("addSuccessMsg", "✓ Expense added successfully!");
+  setTimeout(() => {
+    navigate("dashboard");
+    display();
+  }, 1000);
 }
 
-/* DELETE */
 function deleteExpense(id) {
-  if (!confirm("Delete this expense?")) return;
-  expenses = expenses.filter(e => e.id !== id);
-  save();
-  display();
+  if (confirm("Are you sure you want to delete this expense?")) {
+    expenses = expenses.filter(e => e.id !== id);
+    saveExpenses();
+    display();
+  }
 }
 
-/* MULTI DELETE */
 function toggleDeleteBtn() {
-  let checked = document.querySelectorAll(".chk:checked").length;
-  document.getElementById("deleteSelectedBtn").style.display =
-    checked > 0 ? "block" : "none";
+  const checked = document.querySelectorAll(".chk:checked").length;
+  document.getElementById("deleteSelectedBtn").style.display = checked > 0 ? "block" : "none";
 }
 
 function deleteSelected() {
-  let checked = document.querySelectorAll(".chk:checked");
-  if (!confirm("Delete selected items?")) return;
-
-  let ids = Array.from(checked).map(c=>Number(c.value));
-  expenses = expenses.filter(e => !ids.includes(e.id));
-
-  save();
-  display();
-}
-
-/* SORT */
-function sortExpenses() {
-  let type = document.getElementById("sortBy").value;
-
-  expenses.sort((a,b)=>{
-
-    let da = a.date.split("/").reverse().join("-");
-    let db = b.date.split("/").reverse().join("-");
-
-    if (type==="newest") return new Date(db)-new Date(da);
-    if (type==="oldest") return new Date(da)-new Date(db);
-    if (type==="high") return b.amount-a.amount;
-    if (type==="low") return a.amount-b.amount;
-
-  });
-
-  display();
-}
-
-/* DISPLAY */
-function display() {
-  let list = document.getElementById("list");
-  list.innerHTML = "";
-
-  for (let e of expenses) {
-    list.innerHTML += `
-      <div class="row">
-
-        <input type="checkbox" class="chk" value="${e.id}" onchange="toggleDeleteBtn()">
-
-        <div><b>${e.amount}</b></div>
-        <div>${e.date}</div>
-        <div>${e.category}</div>
-        <div>${e.notes || "-"}</div>
-
-        <button class="btn-del" onclick="deleteExpense(${e.id})">❌</button>
-
-      </div>
-    `;
+  const checked = document.querySelectorAll(".chk:checked");
+  
+  if (checked.length === 0) {
+    alert("Please select at least one expense to delete");
+    return;
   }
 
-  document.getElementById("total").innerText =
-    expenses.reduce((t,e)=>t+e.amount,0);
+  if (confirm(`Delete ${checked.length} selected expense(s)?`)) {
+    const ids = Array.from(checked).map(c => Number(c.value));
+    expenses = expenses.filter(e => !ids.includes(e.id));
+    saveExpenses();
+    display();
+  }
 }
 
-/* CATEGORIES */
-function loadCategories() {
-  let sel = document.getElementById("category");
+// ============ SORTING ============
+function sortExpenses() {
+  const sortType = document.getElementById("sortBy").value;
 
-  let all = [...defaultCategories, ...customCategories];
-  all.sort((a,b)=>a.localeCompare(b));
-
-  sel.innerHTML = "";
-
-  all.forEach(c=>{
-    let o=document.createElement("option");
-    o.value=c;
-    o.text=c;
-    sel.appendChild(o);
+  expenses.sort((a, b) => {
+    switch(sortType) {
+      case "newest":
+        return new Date(b.date) - new Date(a.date);
+      case "oldest":
+        return new Date(a.date) - new Date(b.date);
+      case "high":
+        return b.amount - a.amount;
+      case "low":
+        return a.amount - b.amount;
+      default:
+        return 0;
+    }
   });
 
-  let add=document.createElement("option");
-  add.value="__add__";
-  add.text="➕ Add Category";
-  sel.appendChild(add);
+  display();
+}
 
-  sel.onchange=function(){
-    if(this.value==="__add__"){
-      let n=prompt("Enter category name:");
-      if(n){
-        customCategories.push(n);
-        saveCategories();
-        loadCategories();
+// ============ DISPLAY ============
+function display() {
+  const listDiv = document.getElementById("list");
+  const emptyState = document.getElementById("emptyState");
+
+  if (expenses.length === 0) {
+    listDiv.innerHTML = "";
+    emptyState.style.display = "block";
+    document.getElementById("total").innerText = "0";
+    return;
+  }
+
+  emptyState.style.display = "none";
+  listDiv.innerHTML = "";
+
+  expenses.forEach(expense => {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "chk";
+    checkbox.value = expense.id;
+    checkbox.onchange = toggleDeleteBtn;
+
+    const amountDiv = document.createElement("div");
+    amountDiv.innerHTML = `<b>$${expense.amount.toFixed(2)}</b>`;
+
+    const dateDiv = document.createElement("div");
+    dateDiv.innerText = formatDateDisplay(expense.date);
+
+    const categoryDiv = document.createElement("div");
+    categoryDiv.innerText = expense.category;
+
+    const notesDiv = document.createElement("div");
+    notesDiv.innerText = expense.notes || "-";
+    notesDiv.title = expense.notes;
+
+    const actionBtn = document.createElement("button");
+    actionBtn.className = "btn-del";
+    actionBtn.innerHTML = "🗑️";
+    actionBtn.onclick = (e) => {
+      e.preventDefault();
+      deleteExpense(expense.id);
+    };
+
+    row.appendChild(checkbox);
+    row.appendChild(amountDiv);
+    row.appendChild(dateDiv);
+    row.appendChild(categoryDiv);
+    row.appendChild(notesDiv);
+    row.appendChild(actionBtn);
+
+    listDiv.appendChild(row);
+  });
+
+  // Update total
+  const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+  document.getElementById("total").innerText = total.toFixed(2);
+}
+
+// ============ CATEGORIES ============
+function loadCategories() {
+  const select = document.getElementById("category");
+  const allCategories = [...defaultCategories, ...customCategories];
+  const uniqueCategories = [...new Set(allCategories)].sort();
+
+  select.innerHTML = '<option value="">-- Select Category --</option>';
+
+  uniqueCategories.forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat;
+    option.text = cat;
+    select.appendChild(option);
+  });
+
+  const addOption = document.createElement("option");
+  addOption.value = "__add__";
+  addOption.text = "➕ Add New Category";
+  select.appendChild(addOption);
+
+  select.onchange = function() {
+    if (this.value === "__add__") {
+      const newCategory = prompt("Enter new category name:").trim();
+      if (newCategory && newCategory.length > 0) {
+        if (!customCategories.includes(newCategory)) {
+          customCategories.push(newCategory);
+          saveCategories();
+          loadCategories();
+        } else {
+          alert("Category already exists!");
+        }
       }
+      this.value = "";
     }
   };
 }
 
-/* INIT */
-display();
+// ============ SETTINGS ============
+function exportData() {
+  const data = {
+    expenses: expenses,
+    customCategories: customCategories,
+    exportedAt: new Date().toISOString()
+  };
+
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `ziatrack_backup_${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData() {
+  document.getElementById("importFile").click();
+}
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result); clearAllData() {
+  if (confirm("⚠️ This will permanently delete ALL expenses. Are you sure?")) {
+    if (confirm("This action cannot be undone. Are you REALLY sure?")) {
+      expenses = [];
+      saveExpenses();
+      display();
+      alert("✓ All expenses cleared!");
+    }
+  }
+}
+
+function resetCategories() {
+  if (confirm("Reset custom categories to default?")) {
+    customCategories = [];
+    saveCategories();
+    loadCategories();
+    alert("✓ Categories reset!");
+  }
+}
+
+// ============ UTILITIES ============
+function formatDateDisplay(dateStr) {
+  const date = new Date(dateStr + "T00:00:00");
+  return date.toLocaleDateString("en-US", { 
+    year: "numeric", 
+    month: "short", 
+    day: "numeric" 
+  });
+}
+
+function showError(elementId, message) {
+  const element = document.getElementById(elementId);
+  element.innerText = message;
+  element.style.display = "block";
+  setTimeout(() => {
+    element.style.display = "none";
+  }, 3000);
+}
+
+function showSuccess(elementId, message) {
+  const element = document.getElementById(elementId);
+  element.innerText = message;
+  element.style.display = "block";
+  setTimeout(() => {
+    element.style.display = "none";
+  }, 2000);
+}
+
+// ============ INITIALIZATION ============
+initData();
 loadCategories();
-showPage("dashboard");
+display();
+navigate("dashboard");
 
 </script>
 
